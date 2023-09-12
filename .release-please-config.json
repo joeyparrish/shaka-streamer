@@ -1,0 +1,21 @@
+{
+  "last-release-sha": "a86da1b96c0134ea1e8c2f4f1d33520efe7aa73c",
+  "release-type": "python",
+  "include-component-in-tag": false,
+  "separate-pull-requests": false,
+  "group-pull-request-title-pattern": "chore: release ${version}",
+  "plugins": [
+    {
+      "type": "linked-versions",
+      "components": [".", "binaries"]
+    }
+  ],
+  "packages": {
+    ".": {
+      "package-name": "streamer"
+    },
+    "binaries": {
+      "package-name": "streamer_binaries"
+    }
+  }
+}
