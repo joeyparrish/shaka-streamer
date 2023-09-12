@@ -29,6 +29,7 @@ jobs:
         if: steps.release.outputs.release_created
         uses: actions/setup-python@v4
         with:
+          # The current minimum we support.
           python-version: 3.6
 
       - name: Build packages
@@ -58,3 +59,21 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.SHAKA_STREAMER_BINARIES_TOKEN }}
+
+      - name: Attach main module to release
+        uses: svenstaro/upload-release-action@483c1e56f95e88835747b1c7c60581215016cbf2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag_name }}
+          file: dist/*
+          file_glob: true
+          overwrite: true
+
+      - name: Attach binaries module to release
+        uses: svenstaro/upload-release-action@483c1e56f95e88835747b1c7c60581215016cbf2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag_name }}
+          file: binaries/dist/*
+          file_glob: true
+          overwrite: true
