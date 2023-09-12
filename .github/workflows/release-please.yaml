@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # Create/update release PR
+      - uses: google-github-actions/release-please-action@v3
+        id: release
+        with:
+          # This command instructs the tool to use the config and manifest
+          # files below to decide the next version and the SHA of the previous
+          # release (used to compute the changelog).  This is necessary for our
+          # first automated release.
+          command: manifest
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Checkout code
+        if: steps.release.outputs.release_created
+        uses: actions/checkout@v4
+
+      - name: Build packages
+        if: steps.release.outputs.release_created
+        run: |
+          python3 -m pip install build twine
+          python3 setup.py sdist bdist_wheel
+          python3 binaries/build_wheels.py
+
+      - name: Check packages
+        if: steps.release.outputs.release_created
+        run: python3 -m twine check --strict dist/* binaries/dist/*
+
+      # PyPi tokens are scoped to one package, so these two packages are
+      # uploaded separately with different tokens.
+
+      - name: Publish shaka-streamer
+        if: steps.release.outputs.release_created
+        run: python3 -m twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.SHAKA_STREAMER_TOKEN }}
+
+      - name: Publish shaka-streamer-binaries
+        if: steps.release.outputs.release_created
+        run: python3 -m twine upload binaries/dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.SHAKA_STREAMER_BINARIES_TOKEN }}
+
+      - name: Attach main module to release
+        if: steps.release.outputs.release_created
+        uses: svenstaro/upload-release-action@483c1e56f95e88835747b1c7c60581215016cbf2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag_name }}
+          file: dist/*
+          file_glob: true
+          overwrite: true
+
+      - name: Attach binaries module to release
+        if: steps.release.outputs.release_created
+        uses: svenstaro/upload-release-action@483c1e56f95e88835747b1c7c60581215016cbf2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag_name }}
+          file: binaries/dist/*
+          file_glob: true
+          overwrite: true
