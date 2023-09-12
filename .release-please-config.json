@@ -1,0 +1,24 @@
+{
+  "last-release-sha": "a86da1b96c0134ea1e8c2f4f1d33520efe7aa73c",
+  "release-type": "python",
+  "include-component-in-tag": false,
+  "separate-pull-requests": false,
+  "group-pull-request-title-pattern": "chore: release ${version}",
+  "packages": {
+    ".": {
+      "package-name": "streamer",
+      "component": "streamer"
+    },
+    "binaries": {
+      "package-name": "streamer_binaries",
+      "component": "binaries/streamer_binaries"
+    }
+  },
+  "plugins": [
+    {
+      "type": "linked-versions",
+      "groupName": "group",
+      "components": ["streamer", "binaries/streamer_binaries"]
+    }
+  ]
+}
