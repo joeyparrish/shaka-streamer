@@ -1,0 +1,13 @@
+{
+  "last-release-sha": "a86da1b96c0134ea1e8c2f4f1d33520efe7aa73c",
+  "release-type": "python",
+  "packages": {
+    ".": {
+      "include-component-in-tag": false,
+      "release-as": "0.6.0",
+      "extra-files": [
+        "binaries/streamer_binaries/__init__.py"
+      ]
+    }
+  }
+}
