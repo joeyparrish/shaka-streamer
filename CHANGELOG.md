@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0](https://github.com/joeyparrish/shaka-streamer/compare/v0.5.1...v0.6.0) (2023-09-12)
+
+
+### Features
+
+* Add OPUS mp4 support ([#143](https://github.com/joeyparrish/shaka-streamer/issues/143)) ([2f38022](https://github.com/joeyparrish/shaka-streamer/commit/2f38022a2708dfd29e5c6f51cd7a34c1f8478004))
+* Do not use libaom options, prefer libsvt-av1 ([0893c4f](https://github.com/joeyparrish/shaka-streamer/commit/0893c4f09a24ecd744660d0467946fbe73b51bc0))
+
+
+### Bug Fixes
+
+* Do not encode in mono by default ([709896c](https://github.com/joeyparrish/shaka-streamer/commit/709896ca82525e0933af20d1f4221941148862b3))
+* Fix frame-rate and resolution auto-detection edge case ([#129](https://github.com/joeyparrish/shaka-streamer/issues/129)) ([f42188e](https://github.com/joeyparrish/shaka-streamer/commit/f42188e9bb93af1e27116b42a759a8e49587f7a9)), closes [#127](https://github.com/joeyparrish/shaka-streamer/issues/127)
+* Fix framerate autodetection edge case ([#128](https://github.com/joeyparrish/shaka-streamer/issues/128)) ([aacabdc](https://github.com/joeyparrish/shaka-streamer/commit/aacabdc9bb4b82331d49e91ca41abfbb889cb49e)), closes [#127](https://github.com/joeyparrish/shaka-streamer/issues/127)
+* only use the first line of ffprobe's output ([#120](https://github.com/joeyparrish/shaka-streamer/issues/120)) ([4d7d077](https://github.com/joeyparrish/shaka-streamer/commit/4d7d077e270474f99a2c6851133e8b97b738e990)), closes [#119](https://github.com/joeyparrish/shaka-streamer/issues/119)
+
 ## [0.5.1](https://github.com/shaka-project/shaka-streamer/compare/v0.5.0...v0.5.1) (2021-10-14)
 
  - Require Shaka Packager v2.6.1+, to fix segfault in Linux binaries
