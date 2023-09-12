@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/joeyparrish/shaka-streamer/compare/v0.6.1...v0.6.2) (2023-09-12)
+
+
+### Bug Fixes
+
+* Fix warning of missing field in binaries package ([dec2925](https://github.com/joeyparrish/shaka-streamer/commit/dec2925f32f206eb78e262fbe4ddbe63e68a26cf))
+
 ## [0.6.1](https://github.com/joeyparrish/shaka-streamer/compare/v0.6.0...v0.6.1) (2023-09-12)
 
 
