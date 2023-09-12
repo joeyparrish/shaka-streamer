@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/joeyparrish/shaka-streamer/compare/v0.6.0...v0.6.1) (2023-09-12)
+
+
+### Bug Fixes
+
+* Fix python setup and upload steps ([e0e7065](https://github.com/joeyparrish/shaka-streamer/commit/e0e70651522022709ffabe5b106fe2c7435e021d))
+
 ## [0.6.0](https://github.com/joeyparrish/shaka-streamer/compare/v0.5.1...v0.6.0) (2023-09-12)
 
 
