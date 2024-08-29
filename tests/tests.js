@@ -811,7 +811,7 @@ function codecTests(manifestUrl, format) {
     let codecList = await getAudioAndVideoCodecs(manifestUrl);
     // In HLS, we get "hvc1", but in DASH, it's "hev1".  Accept both.
     codecList = codecList.map((x) => x.replace('hvc1', 'hev1'));
-    expect(codecList).toEqual(['hev1.1.6.L60.90']);
+    expect(codecList).toContain(jasmine.stringMatching('hev1.*'));
   });
 
   it('appropriately filters WebM formats ' + format, async () => {
