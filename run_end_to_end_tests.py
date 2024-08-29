@@ -51,6 +51,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 os.chdir(BASE_DIR)
 controller = None
 use_system_binaries = False
+do_cleanup = True
 
 # Flask was unable to autofind the root_path correctly after an os.chdir() from another directory
 # Dunno why,refer to https://stackoverflow.com/questions/35864584/error-no-such-file-or-directory-when-using-os-chdir-in-flask
@@ -66,9 +67,12 @@ def cleanup():
   controller = None
 
   # If the output directory exists, delete it and make a new one.
-  if os.path.exists(OUTPUT_DIR):
-    shutil.rmtree(OUTPUT_DIR)
-  os.mkdir(OUTPUT_DIR)
+  if do_cleanup:
+    if os.path.exists(OUTPUT_DIR):
+      shutil.rmtree(OUTPUT_DIR)
+
+  if not os.path.exists(OUTPUT_DIR):
+    os.mkdir(OUTPUT_DIR)
 
 def createCrossOriginResponse(body=None, status=200, mimetype='text/plain'):
   # Enable CORS because karma and flask are cross-origin.
@@ -280,6 +284,10 @@ def main():
                       help='Number of trials to run')
   parser.add_argument('--reporters', nargs='+',
                       help='Enables specified reporters in karma')
+  parser.add_argument('--no-cleanup', dest='cleanup', default=True,
+                      action='store_false',
+                      help='Do not clean up the output folder.  Useful in ' +
+                           'debugging.')
   parser.add_argument('--use-system-binaries',
                       action='store_true',
                       help='Use FFmpeg, FFprobe and Shaka Packager binaries ' +
@@ -290,6 +298,9 @@ def main():
 
   global use_system_binaries
   use_system_binaries = args.use_system_binaries
+
+  global do_cleanup
+  do_cleanup = args.cleanup
 
   # Do static type checking on the project first.
   type_check_result = mypy_api.run(['streamer/'])
