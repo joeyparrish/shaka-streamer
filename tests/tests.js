@@ -31,6 +31,7 @@ jasmineEnv.execute = () => {
 
   // Set jasmine config.
   jasmineEnv.configure({
+    random: false,
     specFilter: (spec) => spec.getFullName().includes(filterText) ||
                           filterRegExp.test(spec.getFullName()),
   });
