@@ -293,6 +293,8 @@ def main():
                       help='Use FFmpeg, FFprobe and Shaka Packager binaries ' +
                            'found in PATH instead of the ones offered by ' +
                            'Shaka Streamer.')
+  parser.add_argument('--filter',
+                      help='Plain text or regex filter for test cases')
 
   args = parser.parse_args()
 
@@ -344,10 +346,11 @@ def main():
 
     if args.reporters:
       converted_string = ','.join(args.reporters)
-      karma_args += [
-          '--reporters',
-          converted_string,
-      ]
+      karma_args += [ '--reporters', converted_string ]
+
+    if args.filter:
+      karma_args += [ '--filter', args.filter ]
+
     # If the exit code was not 0, the tests in karma failed or crashed.
     if subprocess.call(karma_args) != 0:
       fails += 1
