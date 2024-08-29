@@ -28,10 +28,14 @@ jasmineEnv.execute = () => {
   // all.
   const filterText = __karma__.config.filter || '';
   const filterRegExp = new RegExp(filterText);
+  const seed = parseInt(__karma__.config.seed) || new Date().getTime();
+
+  console.log('RANDOM SEED', seed);
 
   // Set jasmine config.
   jasmineEnv.configure({
-    random: false,
+    random: true,
+    seed,
     specFilter: (spec) => spec.getFullName().includes(filterText) ||
                           filterRegExp.test(spec.getFullName()),
   });
