@@ -124,9 +124,6 @@ Multiple VAAPI devices are not yet supported on Linux.  See `issue #17`_.
 
 Development
 -----------
-If you wish to make changes to Shaka Streamer, you will also need to install the
-`Python "yaml" module`_.
-
 See :doc:`prerequisites` for detailed instructions on installing prerequisites
 and optional dependencies.
 
@@ -172,6 +169,5 @@ the ``shaka-streamer`` script as an example of how to do this.  See also
 .. _config_files/: https://github.com/shaka-project/shaka-streamer/tree/main/config_files
 .. _issue #17: https://github.com/shaka-project/shaka-streamer/issues/17
 .. _Python 3.9+: https://www.python.org/downloads/
-.. _Python "yaml" module: https://pyyaml.org/
 .. _Shaka Packager: https://github.com/shaka-project/shaka-packager
 .. _FFmpeg: https://ffmpeg.org/
