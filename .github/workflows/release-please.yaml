@@ -51,15 +51,19 @@ jobs:
           python3 -m pip install -r requirements.txt
           python3 -m pip install -r optional_requirements.txt
 
-      - name: Publish main module
+      - name: Build modules
         run: |
           rm -rf build dist shaka_streamer.egg-info/
-          python3 setup.py sdist bdist_wheel
-          python3 -m twine upload --repository testpypi dist/*
-
-      - name: Publish binaries module
-        run: |
           rm -rf binaries/dist binaries/shaka_streamer_binaries.egg-info
           rm -f binaries/streamer_binaries/{ffmpeg-*,ffprobe-*,packager-*}
+          python3 setup.py sdist bdist_wheel
           python3 binaries/build_wheels.py
+
+      - name: Check modules
+        run: |
+          python3 -m twine check --strict dist/* binaries/dist/*
+
+      - name: Publish modules
+        run: |
+          python3 -m twine upload --repository testpypi dist/*
           python3 -m twine upload --repository testpypi binaries/dist/*
