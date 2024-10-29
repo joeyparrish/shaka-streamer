@@ -1,12 +1,11 @@
 {
-  "last-release-sha": "a86da1b96c0134ea1e8c2f4f1d33520efe7aa73c",
   "packages": {
     ".": {
       "include-component-in-tag": false,
       "include-v-in-tag": true,
       "component": "",
       "release-type": "python",
-      "x-extra-files": [
+      "extra-files": [
         "binaries/streamer_binaries/__init__.py"
       ]
     }
