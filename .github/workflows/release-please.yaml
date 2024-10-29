@@ -34,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: release
     if: needs.release.outputs.release_created
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,22 +54,22 @@ jobs:
 
       - name: Build modules
         run: |
-          rm -rf build dist shaka_streamer.egg-info/
-          rm -rf binaries/dist binaries/shaka_streamer_binaries.egg-info
+          # Clean everything.  Doesn't matter in a workflow, but if you're
+          # running this locally...
+          rm -rf build dist binaries/dist
+          rm -rf *.egg-info binaries/*.egg-info
           rm -f binaries/streamer_binaries/{ffmpeg-*,ffprobe-*,packager-*}
+          # Build everything.
           python3 setup.py sdist bdist_wheel
           python3 binaries/build_wheels.py
+          # Put all the build outputs into one folder for upload together.
+          cp binaries/dist/* dist/
 
       - name: Check modules
         run: |
-          python3 -m twine check --strict dist/* binaries/dist/*
+          python3 -m twine check --strict dist/*
 
-      - name: Publish modules
-        run: |
-          python3 -m twine upload --repository testpypi dist/*  # FIXME
-          python3 -m twine upload --repository testpypi binaries/dist/*  # FIXME
-
-      - name: Attach main module to release
+      - name: Attach modules to the release
         uses: svenstaro/upload-release-action@483c1e56f95e88835747b1c7c60581215016cbf2
         with:
           repo_token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
@@ -76,11 +78,8 @@ jobs:
           file_glob: true
           overwrite: true
 
-      - name: Attach binaries module to release
-        uses: svenstaro/upload-release-action@483c1e56f95e88835747b1c7c60581215016cbf2
+      - name: Publish modules
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repo_token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-          tag: ${{ needs.release.outputs.tag_name }}
-          file: binaries/dist/*
-          file_glob: true
-          overwrite: true
+          repository-url: https://test.pypi.org/legacy/  # FIXME
+        #  attestations: true  # FIXME
