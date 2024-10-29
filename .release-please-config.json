@@ -5,10 +5,11 @@
       "include-component-in-tag": false,
       "include-v-in-tag": true,
       "component": "",
-      "release-type": "python",
       "extra-files": [
+        "streamer/__init__.py",
         "binaries/streamer_binaries/__init__.py"
-      ]
+      ],
+      "release-type": "python"
     }
   }
 }
