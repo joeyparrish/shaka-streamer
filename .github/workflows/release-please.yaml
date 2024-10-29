@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - release  # FIXME
 
 jobs:
   release:
@@ -62,7 +63,7 @@ jobs:
           python3 setup.py sdist bdist_wheel
           python3 binaries/build_wheels.py
           # Put all the build outputs into one folder for upload together.
-          cp binaries/dist/* dist/
+          #cp binaries/dist/* dist/  # FIXME
 
       - name: Check modules
         run: |
@@ -80,4 +81,5 @@ jobs:
       - name: Publish modules
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          attestations: true
+          repository-url: https://test.pypi.org/legacy/  # FIXME
+        #  attestations: true  # FIXME
