@@ -54,11 +54,11 @@ jobs:
         run: |
           rm -rf build dist shaka_streamer.egg-info/
           python3 setup.py sdist bdist_wheel
-          python3 -m twine upload dist/*
+          python3 -m twine upload --repository testpypi dist/*
 
       - name: Publish binaries module
         run: |
           rm -rf binaries/dist binaries/shaka_streamer_binaries.egg-info
           rm -f binaries/streamer_binaries/{ffmpeg-*,ffprobe-*,packager-*}
           python3 binaries/build_wheels.py
-          python3 -m twine upload binaries/dist/*
+          python3 -m twine upload --repository testpypi binaries/dist/*
