@@ -63,5 +63,5 @@ jobs:
 
       - name: Publish modules
         run: |
-          python3 -m twine upload dist/*
-          python3 -m twine upload binaries/dist/*
+          python3 -m twine upload --repository testpypi dist/*
+          python3 -m twine upload --repository testpypi binaries/dist/*
