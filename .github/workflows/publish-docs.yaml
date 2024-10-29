@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+      - release  # FIXME
   # For manual debugging:
   workflow_dispatch:
     inputs:
