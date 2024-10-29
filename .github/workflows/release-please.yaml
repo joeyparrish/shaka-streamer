@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - release  # FIXME
 
 jobs:
   release:
@@ -63,8 +64,8 @@ jobs:
 
       - name: Publish modules
         run: |
-          python3 -m twine upload dist/*
-          python3 -m twine upload binaries/dist/*
+          python3 -m twine upload --repository testpypi dist/*  # FIXME
+          python3 -m twine upload --repository testpypi binaries/dist/*  # FIXME
 
       - name: Attach main module to release
         uses: svenstaro/upload-release-action@483c1e56f95e88835747b1c7c60581215016cbf2
