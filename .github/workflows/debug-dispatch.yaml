@@ -1,0 +1,32 @@
+name: Workflow Debug (Dispatch)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "The ref to build and test."
+        type: string
+        required: True
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "github.ref: ${{ github.ref }}"
+          echo "github.event_name: ${{ github.event_name }}"
+          echo ""
+          echo "github.event.inputs.ref: ${{ github.event.inputs.ref }}"
+          echo "inputs.ref: ${{ inputs.ref }}"
+          echo ""
+          echo "github.event.pull_request_target.merge_commit_sha: ${{ github.event.pull_request_target.merge_commit_sha }}"
+          echo "github.event.pull_request.merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}"
+          echo "github.event.push.head: ${{ github.event.push.head }}"
+          echo ""
+          cat <<EOF
+          github.event: ${{ toJSON(github.event) }}
+          EOF

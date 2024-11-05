@@ -1,0 +1,22 @@
+name: Workflow Debug (Caller, Push/Dispatch)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "The ref to build and test."
+        type: string
+        required: True
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  debug:
+    uses: ./.github/workflows/debug-call.yaml
+    with:
+      ref: foo
