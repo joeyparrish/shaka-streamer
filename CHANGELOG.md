@@ -1,5 +1,60 @@
 # Changelog
 
+## [2.0.0](https://github.com/joeyparrish/shaka-streamer/compare/v1.3.0...v2.0.0) (2025-11-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Bump minimum Python version to 3.9 ([#171](https://github.com/joeyparrish/shaka-streamer/issues/171))
+
+### Features
+
+* Add configuration option for "hls_key_uri" ([#239](https://github.com/joeyparrish/shaka-streamer/issues/239)) ([28033ec](https://github.com/joeyparrish/shaka-streamer/commit/28033ecc0e4714c08bed9d4a191404dc74c1a75f))
+* Add generate_iframe_playlist option ([#205](https://github.com/joeyparrish/shaka-streamer/issues/205)) ([071396b](https://github.com/joeyparrish/shaka-streamer/commit/071396b4f27c85716675e3653e435635c43c2c9e))
+* Add OPUS mp4 support ([#143](https://github.com/joeyparrish/shaka-streamer/issues/143)) ([2f38022](https://github.com/joeyparrish/shaka-streamer/commit/2f38022a2708dfd29e5c6f51cd7a34c1f8478004))
+* Add support for FLAC codec ([#187](https://github.com/joeyparrish/shaka-streamer/issues/187)) ([2edfefe](https://github.com/joeyparrish/shaka-streamer/commit/2edfefe43179d97ebe64d0c72ef3d43ce9499f0b))
+* Add support for forced subtitles ([#208](https://github.com/joeyparrish/shaka-streamer/issues/208)) ([96ae67a](https://github.com/joeyparrish/shaka-streamer/commit/96ae67a1d657c0cd4d8d1991742cf5f7dd553d29))
+* Always use HLS session keys to improve player startup performance ([#181](https://github.com/joeyparrish/shaka-streamer/issues/181)) ([dc56dee](https://github.com/joeyparrish/shaka-streamer/commit/dc56dee91f32752667ce161604ade2f8553a739b))
+* Bump minimum Python version to 3.9 ([#171](https://github.com/joeyparrish/shaka-streamer/issues/171)) ([6b4b761](https://github.com/joeyparrish/shaka-streamer/commit/6b4b7610cf6c311048943b5b9461bc99755873fc))
+* **cloud:** Add cloud delete support ([#164](https://github.com/joeyparrish/shaka-streamer/issues/164)) ([aa1f4e7](https://github.com/joeyparrish/shaka-streamer/commit/aa1f4e793750573079a71bdacd11a64cf43d5730))
+* **cloud:** Upload through HTTP proxy node ([#103](https://github.com/joeyparrish/shaka-streamer/issues/103)) ([20c2704](https://github.com/joeyparrish/shaka-streamer/commit/20c2704deacb402e39640408ac6157e94a5f78ba)), closes [#47](https://github.com/joeyparrish/shaka-streamer/issues/47)
+* Expand binary platforms and hardware encoding ([#161](https://github.com/joeyparrish/shaka-streamer/issues/161)) ([0c4b529](https://github.com/joeyparrish/shaka-streamer/commit/0c4b529d56555ad249246cd2a8c5ea935ca9edbe))
+* Log configs ([#225](https://github.com/joeyparrish/shaka-streamer/issues/225)) ([c2244c0](https://github.com/joeyparrish/shaka-streamer/commit/c2244c060d33d09405d636bac803863681a59be5))
+* Recover from upload failures ([#211](https://github.com/joeyparrish/shaka-streamer/issues/211)) ([278d775](https://github.com/joeyparrish/shaka-streamer/commit/278d775272d56ec4eccc437de76c002aac2b8317)), closes [#195](https://github.com/joeyparrish/shaka-streamer/issues/195)
+* Restore HTTP output (not cloud storage) ([#212](https://github.com/joeyparrish/shaka-streamer/issues/212)) ([1a4c7c2](https://github.com/joeyparrish/shaka-streamer/commit/1a4c7c21ba772378e364030ac8f3a6cb62849cbf)), closes [#210](https://github.com/joeyparrish/shaka-streamer/issues/210)
+* Use by default VP9 with mp4 ([#206](https://github.com/joeyparrish/shaka-streamer/issues/206)) ([2ac830b](https://github.com/joeyparrish/shaka-streamer/commit/2ac830b9caaf6e64f55824edfeb03b445b6e3b3c))
+* Use modern Dolby signaling instead of duplicate representations ([#182](https://github.com/joeyparrish/shaka-streamer/issues/182)) ([db55cc6](https://github.com/joeyparrish/shaka-streamer/commit/db55cc651ac85bca9757c1f1c34846e0e7820bc4))
+
+
+### Bug Fixes
+
+* Add missing dependency on typing_extensions ([#231](https://github.com/joeyparrish/shaka-streamer/issues/231)) ([cd49911](https://github.com/joeyparrish/shaka-streamer/commit/cd499114787107d2fb199d7521939cc840d772e6))
+* **binaries:** Bring PyPi package size under the limit ([#192](https://github.com/joeyparrish/shaka-streamer/issues/192)) ([3de6706](https://github.com/joeyparrish/shaka-streamer/commit/3de6706240d6059b270c18bc9e79804ccb172350))
+* **binaries:** Fix arm64 mac binary tags ([#196](https://github.com/joeyparrish/shaka-streamer/issues/196)) ([f06e010](https://github.com/joeyparrish/shaka-streamer/commit/f06e010975d5ba267600e7d95076d547a177488c)), closes [#194](https://github.com/joeyparrish/shaka-streamer/issues/194)
+* **binaries:** Fix macOS arm64 ffmpeg crash ([#202](https://github.com/joeyparrish/shaka-streamer/issues/202)) ([53c4eb6](https://github.com/joeyparrish/shaka-streamer/commit/53c4eb6a85be144a69db5e462c4b155b15524be4))
+* **cloud:** Avoid rate limit issues on live streams ([#162](https://github.com/joeyparrish/shaka-streamer/issues/162)) ([1231502](https://github.com/joeyparrish/shaka-streamer/commit/1231502c068e15c6e10b856520d5fc891a5bcc20))
+* **cloud:** Fix write failures from Packager ([#167](https://github.com/joeyparrish/shaka-streamer/issues/167)) ([791e39f](https://github.com/joeyparrish/shaka-streamer/commit/791e39f0a9ecb12252eb6ed08155653f6614c5ab))
+* **cloud:** Quiet the HTTP server log ([#163](https://github.com/joeyparrish/shaka-streamer/issues/163)) ([4170d21](https://github.com/joeyparrish/shaka-streamer/commit/4170d218dc834f9b174019287320de64e596e54c))
+* **cloud:** Retry on all failures ([#165](https://github.com/joeyparrish/shaka-streamer/issues/165)) ([7bb46d4](https://github.com/joeyparrish/shaka-streamer/commit/7bb46d446ae645ab0fbe471bf59ff3091a87c6e7))
+* **docs:** Improve READMEs and pypi docs for binaries ([#214](https://github.com/joeyparrish/shaka-streamer/issues/214)) ([4dd6fa4](https://github.com/joeyparrish/shaka-streamer/commit/4dd6fa4f4bddc8398b86784535ffd042174595dc))
+* Fix frame-rate and resolution auto-detection edge case ([#129](https://github.com/joeyparrish/shaka-streamer/issues/129)) ([f42188e](https://github.com/joeyparrish/shaka-streamer/commit/f42188e9bb93af1e27116b42a759a8e49587f7a9)), closes [#127](https://github.com/joeyparrish/shaka-streamer/issues/127)
+* Fix framerate autodetection edge case ([#128](https://github.com/joeyparrish/shaka-streamer/issues/128)) ([aacabdc](https://github.com/joeyparrish/shaka-streamer/commit/aacabdc9bb4b82331d49e91ca41abfbb889cb49e)), closes [#127](https://github.com/joeyparrish/shaka-streamer/issues/127)
+* Fix missing cloud/ subfolder ([#235](https://github.com/joeyparrish/shaka-streamer/issues/235)) ([ad0b869](https://github.com/joeyparrish/shaka-streamer/commit/ad0b8698f84a0d09c0e196e107437b0b3e51f3fe)), closes [#234](https://github.com/joeyparrish/shaka-streamer/issues/234)
+* Fix typing of log_request ([#166](https://github.com/joeyparrish/shaka-streamer/issues/166)) ([c38d7e9](https://github.com/joeyparrish/shaka-streamer/commit/c38d7e9f4ba0962c5c9b186bc3ed13f6a747903e))
+* **HLS:** Fix audio grouping by codec ([#185](https://github.com/joeyparrish/shaka-streamer/issues/185)) ([7f07eec](https://github.com/joeyparrish/shaka-streamer/commit/7f07eec9042ae62a1e1c6719c0ad4f8fffc2775f))
+* only use the first line of ffprobe's output ([#120](https://github.com/joeyparrish/shaka-streamer/issues/120)) ([4d7d077](https://github.com/joeyparrish/shaka-streamer/commit/4d7d077e270474f99a2c6851133e8b97b738e990)), closes [#119](https://github.com/joeyparrish/shaka-streamer/issues/119)
+
+
+### Performance Improvements
+
+* Use a process pool to improve cloud upload performance ([#227](https://github.com/joeyparrish/shaka-streamer/issues/227)) ([f542acd](https://github.com/joeyparrish/shaka-streamer/commit/f542acd43e518986bdb5a2b7e74d200d0f29e977))
+
+
+### Documentation
+
+* Fix HEVC sample config ([#229](https://github.com/joeyparrish/shaka-streamer/issues/229)) ([b22b8c5](https://github.com/joeyparrish/shaka-streamer/commit/b22b8c5cd1ad262652586b15baed4d47ac012017))
+* Update cloud upload docs ([#168](https://github.com/joeyparrish/shaka-streamer/issues/168)) ([fddf413](https://github.com/joeyparrish/shaka-streamer/commit/fddf4139800c27c16433033c7c920daa13a0f900))
+
 ## [1.3.0](https://github.com/shaka-project/shaka-streamer/compare/v1.2.2...v1.3.0) (2025-07-22)
 
 
