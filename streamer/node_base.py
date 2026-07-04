@@ -30,13 +30,13 @@ from typing import Any, Dict, IO, List, Optional, Union
 class ProcessStatus(enum.Enum):
   # Use number values so we can sort based on value.
 
-  Finished = 0
+  FINISHED = 0
   """The node has completed its task and shut down."""
 
-  Running = 1
+  RUNNING = 1
   """The node is still running."""
 
-  Errored = 2
+  ERRORED = 2
   """The node has failed."""
 
 
@@ -63,7 +63,7 @@ class NodeBase(object):
 
   def _create_process(self,
                       args: Union[str, List[str]],
-                      env: Dict[str, str] = {},
+                      env: Optional[Dict[str, str]] = None,
                       merge_env: bool = True,
                       stdout: Union[int, IO[Any], None] = None,
                       stderr: Union[int, IO[Any], None] = None,
@@ -81,6 +81,8 @@ class NodeBase(object):
     Returns:
       The Popen object of the subprocess.
     """
+    if env is None:
+      env = {}
     if merge_env:
       child_env = os.environ.copy()
       child_env.update(env)
@@ -94,7 +96,7 @@ class NodeBase(object):
       assert isinstance(args, str)
       print('+ ' + args)
     else:
-      assert type(args) is list
+      assert isinstance(args, list)
       print('+ ' + ' '.join([shlex.quote(arg) for arg in args]))
 
 
@@ -111,24 +113,24 @@ class NodeBase(object):
 
     self._process.poll()
     if self._process.returncode is None:
-      return ProcessStatus.Running
+      return ProcessStatus.RUNNING
 
     if self._process.returncode == 0:
-      return ProcessStatus.Finished
+      return ProcessStatus.FINISHED
     else:
-      return ProcessStatus.Errored
+      return ProcessStatus.ERRORED
 
-  def stop(self, status: Optional[ProcessStatus]) -> None:
+  def stop(self, _status: Optional[ProcessStatus]) -> None:
     """Stop the subprocess if it's still running."""
     if self._process:
       # Slightly more polite than kill.  Try this first.
       self._process.terminate()
 
-      if self.check_status() == ProcessStatus.Running:
+      if self.check_status() == ProcessStatus.RUNNING:
         # If it's not dead yet, wait 1 second.
         time.sleep(1)
 
-      if self.check_status() == ProcessStatus.Running:
+      if self.check_status() == ProcessStatus.RUNNING:
         # If it's still not dead, use kill.
         self._process.kill()
         # Wait for the process to die and read its exit code.  There is no way
@@ -143,8 +145,8 @@ class PolitelyWaitOnFinish(node_base.NodeBase):
   the subprocesses of a node to terminate.
   """
 
-  def stop(self, status: Optional[ProcessStatus]) -> None:
-    if self._process and status == ProcessStatus.Finished:
+  def stop(self, _status: Optional[ProcessStatus]) -> None:
+    if self._process and _status == ProcessStatus.FINISHED:
       try:
         print('Waiting for', self.__class__.__name__)
         self._process.wait(timeout=300)  # 5m timeout
@@ -152,7 +154,7 @@ class PolitelyWaitOnFinish(node_base.NodeBase):
         traceback.print_exc()  # print the exception
         # Fall through.
 
-    super().stop(status)
+    super().stop(_status)
 
 class ThreadedNodeBase(NodeBase):
   """A base class for nodes that run a thread.
@@ -162,9 +164,10 @@ class ThreadedNodeBase(NodeBase):
 
   _thread: Optional[threading.Thread]
 
-  def __init__(self, thread_name: str, continue_on_exception: bool, sleep_time: float):
+  def __init__(self, thread_name: str, continue_on_exception: bool,
+               sleep_time: float):
     super().__init__()
-    self._status = ProcessStatus.Finished
+    self._status = ProcessStatus.FINISHED
     self._thread_name = thread_name
     self._thread = None
     self._continue_on_exception = continue_on_exception
@@ -172,17 +175,17 @@ class ThreadedNodeBase(NodeBase):
     self._sleep_waker_event = threading.Event()
 
   def _thread_main(self) -> None:
-    while self._status == ProcessStatus.Running:
+    while self._status == ProcessStatus.RUNNING:
       try:
         self._thread_single_pass()
-      except:
+      except Exception:  # pylint: disable=broad-exception-caught
         print('Exception in', self._thread_name, '-', sys.exc_info())
 
         if self._continue_on_exception:
           print(self.__class__.__name__+": 'Continuing.'")
         else:
           print(self.__class__.__name__+": 'Quitting.'")
-          self._status = ProcessStatus.Errored
+          self._status = ProcessStatus.ERRORED
           return
 
       # Wait a little bit before performing the next pass.
@@ -202,12 +205,13 @@ class ThreadedNodeBase(NodeBase):
     pass
 
   def start(self) -> None:
-    self._status = ProcessStatus.Running
-    self._thread = threading.Thread(target=self._thread_main, name=self._thread_name)
+    self._status = ProcessStatus.RUNNING
+    self._thread = threading.Thread(
+        target=self._thread_main, name=self._thread_name)
     self._thread.start()
 
-  def stop(self, status: Optional[ProcessStatus]) -> None:
-    self._status = ProcessStatus.Finished
+  def stop(self, _status: Optional[ProcessStatus]) -> None:
+    self._status = ProcessStatus.FINISHED
     # If the thread was sleeping, wake it up.
     self._sleep_waker_event.set()
     if self._thread:

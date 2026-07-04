@@ -45,8 +45,12 @@ PLATFORM_SUFFIXES = {
     'win_amd64': '-win-x64.exe',
 }
 
-FFMPEG_DL_PREFIX = 'https://github.com/shaka-project/static-ffmpeg-binaries/releases/download/' + FFMPEG_VERSION
-PACKAGER_DL_PREFIX = 'https://github.com/shaka-project/shaka-packager/releases/download/' + PACKAGER_VERSION
+FFMPEG_DL_PREFIX = (
+    'https://github.com/shaka-project/static-ffmpeg-binaries'
+    '/releases/download/' + FFMPEG_VERSION)
+PACKAGER_DL_PREFIX = (
+    'https://github.com/shaka-project/shaka-packager'
+    '/releases/download/' + PACKAGER_VERSION)
 
 # The download links to each binary.  These download links aren't complete.
 # They are missing the platfrom-specific suffix and optional distro-specific
@@ -59,11 +63,10 @@ NON_DISTRO_BINARIES_DL = [
     FFMPEG_DL_PREFIX + '/ffprobe',
     PACKAGER_DL_PREFIX + '/packager',
 ]
-# Important: wrap map() in list(), because map returns an iterator, and we need
-# a real list.
-UBUNTU_SUFFIXES = list(map(
-    lambda version: '-ubuntu-{}'.format(version),
-    streamer_binaries._ubuntu_versions_with_hw_encoders))
+UBUNTU_SUFFIXES = [
+    f'-ubuntu-{version}'
+    for version in streamer_binaries._ubuntu_versions_with_hw_encoders  # pylint: disable=protected-access
+]
 
 BINARIES_ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 

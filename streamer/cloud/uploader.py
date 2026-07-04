@@ -31,7 +31,7 @@ ALL_SUPPORTED_PROTOCOLS: list[str] = ['gs', 's3', 'azure']
 try:
   from streamer.cloud.gcs import GCSUploader
   SUPPORTED_PROTOCOLS.append('gs')
-except:
+except Exception:  # pylint: disable=broad-exception-caught
   pass
 
 
@@ -40,7 +40,7 @@ except:
 try:
   from streamer.cloud.s3 import S3Uploader
   SUPPORTED_PROTOCOLS.append('s3')
-except:
+except Exception:  # pylint: disable=broad-exception-caught
   pass
 
 
@@ -49,18 +49,18 @@ except:
 try:
   from streamer.cloud.azure import AzureStorageUploader
   SUPPORTED_PROTOCOLS.append('azure')
-except:
+except Exception:  # pylint: disable=broad-exception-caught
   pass
 
 
 def create(upload_location: str) -> CloudUploaderBase:
   """Create an uploader appropriate to the upload location URL."""
 
-  if upload_location.startswith("gs://"):
+  if upload_location.startswith('gs://'):
     return GCSUploader(upload_location)
-  elif upload_location.startswith("s3://"):
+  elif upload_location.startswith('s3://'):
     return S3Uploader(upload_location)
-  elif upload_location.startswith("azure://"):
+  elif upload_location.startswith('azure://'):
     return AzureStorageUploader(upload_location)
   else:
-    raise RuntimeError("Protocol of {} isn't supported".format(upload_location))
+    raise RuntimeError(f"Protocol of {upload_location} isn't supported")

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Configuration classes for codec and bitrate settings."""
+
 import enum
 import math
 import re
@@ -29,13 +31,15 @@ class BitrateString(configuration.ValidatingType, str):
 
   @staticmethod
   def validate(value: str) -> None:
-    if type(value) is not str:
+    if not isinstance(value, str):
       raise TypeError()
     if not re.match(r'^[\d\.]+(?:[kM])?$', value):
       raise ValueError('not a bitrate string (e.g. 500k or 7.5M)')
 
 
 class AudioCodec(enum.Enum):
+  """Supported audio codecs for transcoding."""
+
   AAC = 'aac'
   OPUS = 'opus'
   AC3 = 'ac3'
@@ -46,7 +50,7 @@ class AudioCodec(enum.Enum):
     """Returns True if this codec is hardware accelerated."""
     return False
 
-  def get_ffmpeg_codec_string(self, hwaccel_api: str) -> str:
+  def get_ffmpeg_codec_string(self, _hwaccel_api: str) -> str:
     """Returns a codec string accepted by FFmpeg for this codec."""
     # FFmpeg warns:
     #   The encoder 'opus' is experimental but experimental codecs are not
@@ -60,14 +64,15 @@ class AudioCodec(enum.Enum):
   def get_output_format(self) -> str:
     """Returns an FFmpeg output format suitable for this codec."""
     # TODO(#31): add support for configurable output format per-codec
-    if self in {AudioCodec.OPUS, AudioCodec.AAC, AudioCodec.AC3, AudioCodec.EAC3, AudioCodec.FLAC}:
+    if self in {AudioCodec.OPUS, AudioCodec.AAC, AudioCodec.AC3,
+                AudioCodec.EAC3, AudioCodec.FLAC}:
       return 'mp4'
     else:
-      assert False, 'No mapping for output format for codec {}'.format(
-          self.value)
+      assert False, f'No mapping for output format for codec {self.value}'
 
 
 class VideoCodec(enum.Enum):
+  """Supported video codecs for transcoding."""
 
   H264 = 'h264'
   """H264, also known as AVC."""
@@ -77,11 +82,11 @@ class VideoCodec(enum.Enum):
 
   AV1 = 'av1'
   """AV1."""
-  
+
   HEVC = 'hevc'
   """HEVC, also known as h.265"""
 
-  def __init__(self, value):
+  def __init__(self, _value):
     # Set all the codecs not to be hardware accelerated at the begining.
     self._hw_acc = False
 
@@ -90,7 +95,7 @@ class VideoCodec(enum.Enum):
     if isinstance(value, str) and value.startswith('hw:'):
       obj = cls(value[3:])
       # Overwrite the _hw_acc variable for this codec.
-      obj._hw_acc = True
+      obj._hw_acc = True  # pylint: disable=protected-access
       return obj
     return super()._missing_(value)
 
@@ -108,17 +113,19 @@ class VideoCodec(enum.Enum):
 
   def get_output_format(self) -> str:
     """Returns an FFmpeg output format suitable for this codec."""
-    # TODO(#31): add support for configurable output format per-codec (mp4 or webm)
-    if self in {VideoCodec.H264, VideoCodec.VP9, VideoCodec.HEVC, VideoCodec.AV1}:
+    # TODO(#31): add support for configurable output format per-codec
+    # (mp4 or webm)
+    if self in {VideoCodec.H264, VideoCodec.VP9, VideoCodec.HEVC,
+                VideoCodec.AV1}:
       return 'mp4'
     else:
-      assert False, 'No mapping for output format for codec {}'.format(
-          self.value)
+      assert False, f'No mapping for output format for codec {self.value}'
 
 
 class AudioChannelLayout(configuration.RuntimeMap):
+  """A named audio channel layout with per-codec bitrate mappings."""
 
-  max_channels = configuration.Field(type=int, required=True).cast()
+  max_channels = configuration.Field(field_type=int, required=True).cast()
   """The maximum number of channels in this layout.
 
   For example, the maximum number of channels for stereo is 2.
@@ -181,14 +188,16 @@ class AudioChannelLayoutName(configuration.RuntimeMapKeyValidator):
 
 
 class VideoResolution(configuration.RuntimeMap):
+  """A named video resolution with per-codec bitrate mappings."""
 
-  max_width = configuration.Field(type=int, required=True).cast()
+  max_width = configuration.Field(field_type=int, required=True).cast()
   """The maximum width in pixels for this named resolution."""
 
-  max_height = configuration.Field(type=int, required=True).cast()
+  max_height = configuration.Field(field_type=int, required=True).cast()
   """The maximum height in pixels for this named resolution."""
 
-  max_frame_rate = configuration.Field(type=float, default=math.inf).cast()
+  max_frame_rate = configuration.Field(
+      field_type=float, default=math.inf).cast()
   """The maximum frame rate in frames per second for this named resolution.
 
   By default, the max frame rate is unlimited.
@@ -386,6 +395,7 @@ DEFAULT_VIDEO_RESOLUTIONS = {
 
 
 class BitrateConfig(configuration.Base):
+  """Top-level bitrate configuration holding audio and video resolution maps."""
 
   audio_channel_layouts = configuration.Field(
       Dict[str, AudioChannelLayout],

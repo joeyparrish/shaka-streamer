@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base64
+"""Package setup for shaka-streamer."""
+
 import setuptools
 
 import streamer
 
-with open('README.md', 'r') as f:
+with open('README.md', 'r', encoding='utf-8') as f:
   long_description = f.read()
 
 setuptools.setup(

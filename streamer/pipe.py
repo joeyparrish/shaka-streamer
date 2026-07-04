@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A module that encapsulates all the platform-specific logic related to creating
-named pipes."""
+"""A module that encapsulates all the platform-specific logic related to
+creating named pipes."""
 
 import os
 import sys
@@ -26,26 +26,27 @@ class Pipe:
 
   def __init__(self) -> None:
     """Initializes a non-functioning pipe."""
-    
+
     self._read_pipe_name = ''
     self._write_pipe_name = ''
     self._thread: Optional[Thread] = None
 
   @staticmethod
   def create_ipc_pipe(temp_dir: str, suffix: str = '') -> 'Pipe':
-    """A static method used to create a pipe between two processes. 
-    
+    """A static method used to create a pipe between two processes.
+
     On POSIX systems, it creates a named pipe using `os.mkfifo`.
-    
-    On Windows platforms, it starts a backgroud thread that transfars data from the
-    writer to the reader process it is connected to.
+
+    On Windows platforms, it starts a background thread that transfers data
+    from the writer to the reader process it is connected to.
     """
+    # pylint: disable=protected-access  # accessing own class's private attrs on sibling instance
 
     unique_name = str(uuid.uuid4()) + suffix
     pipe = Pipe()
 
     if sys.platform == 'win32':
-      import win32pipe # type: ignore
+      import win32pipe # type: ignore  # pylint: disable=import-outside-toplevel
       pipe_name = '-nt-shaka-' + unique_name
       # The read pipe is connected to a writer process.
       pipe._read_pipe_name = r'\\.\pipe\W' + pipe_name
@@ -56,7 +57,8 @@ class Pipe:
       read_side = win32pipe.CreateNamedPipe(
           pipe._read_pipe_name,
           win32pipe.PIPE_ACCESS_INBOUND,
-          win32pipe.PIPE_WAIT | win32pipe.PIPE_TYPE_BYTE | win32pipe.PIPE_READMODE_BYTE,
+          (win32pipe.PIPE_WAIT | win32pipe.PIPE_TYPE_BYTE |
+           win32pipe.PIPE_READMODE_BYTE),
           1,
           buf_size,
           buf_size,
@@ -66,7 +68,8 @@ class Pipe:
       write_side = win32pipe.CreateNamedPipe(
           pipe._write_pipe_name,
           win32pipe.PIPE_ACCESS_OUTBOUND,
-          win32pipe.PIPE_WAIT | win32pipe.PIPE_TYPE_BYTE | win32pipe.PIPE_READMODE_BYTE,
+          (win32pipe.PIPE_WAIT | win32pipe.PIPE_TYPE_BYTE |
+           win32pipe.PIPE_READMODE_BYTE),
           1,
           buf_size,
           buf_size,
@@ -92,6 +95,7 @@ class Pipe:
   @staticmethod
   def create_file_pipe(path: str, mode: str) -> 'Pipe':
     """Returns a Pipe object whose read or write end is a path to a file."""
+    # pylint: disable=protected-access  # accessing own class's private attrs on sibling instance
 
     pipe = Pipe()
     # A process will write on the read pipe(file).
@@ -101,18 +105,21 @@ class Pipe:
     elif mode == 'r':
       pipe._write_pipe_name = path
     else:
-      raise RuntimeError("'{}' is not a valid mode for a Pipe.".format(mode))
+      raise RuntimeError(f"'{mode}' is not a valid mode for a Pipe.")
     return pipe
 
   @staticmethod
   def _win_thread_fn(read_side, write_side, buf_size):
     """This method serves as a server that connects a writer client
     to a reader client.
-    
-    This methods will run as a thread, and will only be called on Windows platforms.
+
+    This method will run as a thread, and will only be called on Windows
+    platforms.
     """
 
-    import win32pipe, win32file, pywintypes # type: ignore
+    import win32pipe  # type: ignore  # pylint: disable=import-outside-toplevel
+    import win32file  # type: ignore  # pylint: disable=import-outside-toplevel
+    import pywintypes  # type: ignore  # pylint: disable=import-outside-toplevel
     try:
       # Connect to both ends of the pipe before starting the transfer.
       # This funciton is blocking. If no process is connected yet, it will wait
@@ -127,7 +134,7 @@ class Pipe:
       # Remove the pipes from the system.
       win32file.CloseHandle(read_side)
       win32file.CloseHandle(write_side)
-      # If the error was due to one of the processes shutting down, just exit normally.
+      # If the error was due to a process shutting down, exit normally.
       if isinstance(ex, pywintypes.error) and ex.args[0] in [109, 232]:
         return 0
       # Otherwise, raise that error.

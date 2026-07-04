@@ -17,16 +17,15 @@
 import os
 import subprocess
 
-from . import input_configuration
 from . import node_base
 from . import pipeline_configuration
 
-from streamer.bitrate_configuration import AudioCodec, VideoCodec
+from streamer.bitrate_configuration import AudioCodec
 from streamer.input_configuration import MediaType
 from streamer.output_stream import OutputStream
 from streamer.pipeline_configuration import EncryptionMode, PipelineConfig
 from streamer.util import is_url
-from typing import List, Optional, Union, cast
+from typing import List, Optional, cast
 
 # Alias a few classes to avoid repeating namespaces later.
 ManifestFormat = pipeline_configuration.ManifestFormat
@@ -57,6 +56,7 @@ def build_path(output_location, sub_path):
 
 
 class PackagerNode(node_base.PolitelyWaitOnFinish):
+  """A pipeline node that runs Shaka Packager to package and segment media."""
 
   def __init__(self,
                pipeline_config: PipelineConfig,
@@ -126,7 +126,7 @@ class PackagerNode(node_base.PolitelyWaitOnFinish):
       # system in ffmpeg, this will stop any Packager output from getting to
       # the screen.
       packager_log_file = 'PackagerNode-' + str(self._index) + '.log'
-      stdout = open(packager_log_file, 'w')
+      stdout = open(packager_log_file, 'w', encoding='utf-8')
 
     self._process: subprocess.Popen = self._create_process(
         args,
@@ -134,61 +134,65 @@ class PackagerNode(node_base.PolitelyWaitOnFinish):
         stdout=stdout)
 
   def _setup_stream(self, stream: OutputStream) -> str:
-    dict = {
+    stream_dict = {
         'in': stream.ipc_pipe.read_end(),
         'stream': stream.type.value,
     }
 
-    suffix = ""
-    friendly_name = stream.input.language if stream.input.language else "und"
+    suffix = ''
+    friendly_name = stream.input.language if stream.input.language else 'und'
 
     if stream.input.skip_encryption:
-      dict['skip_encryption'] = str(stream.input.skip_encryption)
+      stream_dict['skip_encryption'] = str(stream.input.skip_encryption)
 
     if stream.type == MediaType.AUDIO:
-      dict['hls_group_id'] = str(cast(AudioCodec, stream.codec).value)
-      dict['hls_name'] = f"{friendly_name}"
+      stream_dict['hls_group_id'] = str(cast(AudioCodec, stream.codec).value)
+      stream_dict['hls_name'] = f'{friendly_name}'
 
-    if stream.type == MediaType.VIDEO and self._pipeline_config.generate_iframe_playlist:
-      dict['iframe_playlist_name'] = 'iframe_' + stream.get_identification() + '.m3u8'
+    if (stream.type == MediaType.VIDEO
+        and self._pipeline_config.generate_iframe_playlist):
+      stream_dict['iframe_playlist_name'] = (
+          'iframe_' + stream.get_identification() + '.m3u8')
 
     if stream.type == MediaType.TEXT:
       if stream.input.forced_subtitle:
-        dict['forced_subtitle'] = '1'
-        dict['hls_name'] = f"{friendly_name} (Forced)"
-        suffix = "_forced"
+        stream_dict['forced_subtitle'] = '1'
+        stream_dict['hls_name'] = f'{friendly_name} (Forced)'
+        suffix = '_forced'
       else:
-        dict['hls_name'] = friendly_name
+        stream_dict['hls_name'] = friendly_name
 
     if stream.input.drm_label:
-      dict['drm_label'] = stream.input.drm_label
+      stream_dict['drm_label'] = stream.input.drm_label
 
     # Note: Shaka Packager will not accept 'und' as a language, but Shaka
     # Player will fill that in if the language metadata is missing from the
     # manifest/playlist.
     if stream.input.language and stream.input.language != 'und':
-      dict['language'] = stream.input.language
+      stream_dict['language'] = stream.input.language
 
     if self._pipeline_config.segment_per_file:
       init_base = stream.get_init_seg_file().write_end()
       media_base = stream.get_media_seg_file().write_end()
       if suffix:
-        init_base = init_base.replace("_init.mp4", f"{suffix}_init.mp4")
-        media_base = media_base.replace("_$Number$.mp4", f"{suffix}_$Number$.mp4")
-      dict['init_segment'] = build_path(self._segment_dir, init_base)
-      dict['segment_template'] = build_path(self._segment_dir, media_base)
+        init_base = init_base.replace('_init.mp4', f'{suffix}_init.mp4')
+        media_base = media_base.replace(
+            '_$Number$.mp4', f'{suffix}_$Number$.mp4')
+      stream_dict['init_segment'] = build_path(self._segment_dir, init_base)
+      stream_dict['segment_template'] = build_path(
+          self._segment_dir, media_base)
     else:
       output_base = stream.get_single_seg_file().write_end()
       if suffix:
-        output_base = output_base.replace(".mp4", f"{suffix}.mp4")
-      dict['output'] = build_path(self._segment_dir, output_base)
+        output_base = output_base.replace('.mp4', f'{suffix}.mp4')
+      stream_dict['output'] = build_path(self._segment_dir, output_base)
 
     if stream.is_dash_only():
-      dict['dash_only'] = '1'
+      stream_dict['dash_only'] = '1'
 
     # The format of this argument to Shaka Packager is a single string of
     # key=value pairs separated by commas.
-    return ','.join(key + '=' + value for key, value in dict.items())
+    return ','.join(key + '=' + value for key, value in stream_dict.items())
 
   def _setup_manifest_format(self) -> List[str]:
     args: List[str] = []
@@ -197,8 +201,9 @@ class PackagerNode(node_base.PolitelyWaitOnFinish):
       if self._pipeline_config.utc_timings:
         args += [
             '--utc_timings',
-            ','.join(timing.scheme_id_uri + '=' +
-                     timing.value for timing in self._pipeline_config.utc_timings)
+            ','.join(
+                timing.scheme_id_uri + '=' + timing.value
+                for timing in self._pipeline_config.utc_timings)
         ]
 
       if self._pipeline_config.low_latency_dash_mode:

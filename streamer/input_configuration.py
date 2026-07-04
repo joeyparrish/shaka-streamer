@@ -12,31 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Configuration classes for input sources."""
+
 import enum
 import platform
 
 from . import bitrate_configuration
 from . import configuration
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 
 class InputNotFound(configuration.ConfigError):
   """An error raised when an input stream is not found."""
 
-  def __init__(self, input):
-    super().__init__(input.__class__, 'track_num',
-                     getattr(input.__class__, 'track_num'))
-    self.input = input
+  def __init__(self, media_input):
+    super().__init__(media_input.__class__, 'track_num',
+                     getattr(media_input.__class__, 'track_num'))
+    self.input = media_input
 
   def __str__(self):
-    return ('In {}, {} track #{} was'
-            ' not found in "{}"').format(self.class_name,
-                                         self.input.media_type.value,
-                                         self.input.track_num,
-                                         self.input.name)
+    return (f'In {self.class_name}, {self.input.media_type.value} track '
+            f'#{self.input.track_num} was not found in "{self.input.name}"')
 
 class InputType(enum.Enum):
+  """The type of input source."""
+
   FILE = 'file'
   """A track from a file.  Usable only with VOD."""
 
@@ -234,7 +235,7 @@ class Input(configuration.Base):
 
     # FIXME: A late import to avoid circular dependency issues between these two
     # modules.
-    from . import autodetect
+    from . import autodetect  # pylint: disable=import-outside-toplevel
 
     if not autodetect.is_present(self):
       raise InputNotFound(self)
@@ -278,8 +279,8 @@ class Input(configuration.Base):
         self.language = autodetect.get_language(self) or 'und'
       # Text streams are only supported in plain file inputs.
       if self.input_type != InputType.FILE:
-        reason = 'text streams are not supported in input_type "{}"'.format(
-            self.input_type.value)
+        reason = (f'text streams are not supported in input_type '
+                  f'"{self.input_type.value}"')
         disallow_field('input_type', reason)
       if self.forced_subtitle is None:
         self.forced_subtitle = autodetect.get_forced_subtitle(self)
@@ -316,11 +317,11 @@ class Input(configuration.Base):
     """
 
     if self.media_type == MediaType.VIDEO:
-      return 'v:{}'.format(self.track_num)
+      return f'v:{self.track_num}'
     elif self.media_type == MediaType.AUDIO:
-      return 'a:{}'.format(self.track_num)
+      return f'a:{self.track_num}'
     elif self.media_type == MediaType.TEXT:
-      return 's:{}'.format(self.track_num)
+      return f's:{self.track_num}'
 
     assert False, 'Unrecognized media_type!  This should not happen.'
 
@@ -342,8 +343,8 @@ class Input(configuration.Base):
                 '-f', 'video4linux2',
             ],
             'Darwin': [
-                # Webcams on macOS use FFmpeg's avfoundation input format.  With
-                # this, you also have to specify an input framerate, unfortunately.
+                # Webcams on macOS use FFmpeg's avfoundation input format.
+                # You also have to specify an input framerate, unfortunately.
                 '-f', 'avfoundation',
                 '-framerate', '30',
             ],
@@ -374,7 +375,7 @@ class Input(configuration.Base):
       return []
 
     args = args_for_input_type.get(platform.system())
-    assert args, '{} is not supported on this platform!'.format(self.input_type.value)
+    assert args, f'{self.input_type.value} is not supported on this platform!'
 
     return args
 
@@ -382,7 +383,8 @@ class Input(configuration.Base):
     return bitrate_configuration.VideoResolution.get_value(self.resolution)
 
   def get_channel_layout(self) -> bitrate_configuration.AudioChannelLayout:
-    return bitrate_configuration.AudioChannelLayout.get_value(self.channel_layout)
+    return bitrate_configuration.AudioChannelLayout.get_value(
+        self.channel_layout)
 
 class SinglePeriod(configuration.Base):
   """An object representing a single period in a multiperiod inputs list."""
@@ -410,20 +412,13 @@ class InputConfig(configuration.Base):
 
     Raises ValueError for unsupported input types or files with no tracks.
     """
-    from . import autodetect   # late import – avoids circular dependency
+    # Late import avoids a circular dependency.
+    from . import autodetect  # pylint: disable=import-outside-toplevel
 
-    UNPROBABLE_INPUT_TYPES = {
+    unprobable_input_types = {
       InputType.WEBCAM.value,
       InputType.MICROPHONE.value,
       InputType.EXTERNAL_COMMAND.value,
-    }
-
-    CODEC_TYPE_TO_MEDIA_TYPE_VALUE = {
-      # We use .value so the expanded dicts stay as plain strings,
-      # exactly as the user would write them manually.
-      'audio':    MediaType.AUDIO.value,    # 'audio'
-      'video':    MediaType.VIDEO.value,    # 'video'
-      'subtitle': MediaType.TEXT.value,     # 'text'
     }
 
     expanded: List[Dict[str, Any]] = []
@@ -440,11 +435,10 @@ class InputConfig(configuration.Base):
 
       # ── autodetect path ────────────────────────────────────────────────
       input_type = inp.get('input_type', InputType.FILE.value)
-      if input_type in UNPROBABLE_INPUT_TYPES:
+      if input_type in unprobable_input_types:
         raise ValueError(
             'media_type "autodetect" is not supported for '
-            'input_type "{}". Specify the media_type explicitly.'
-            .format(input_type))
+            f'input_type "{input_type}". Specify the media_type explicitly.')
 
       filename = inp.get('name', '')
       tracks = autodetect.get_tracks(filename)
@@ -452,7 +446,7 @@ class InputConfig(configuration.Base):
       if not tracks:
         raise ValueError(
             'media_type "autodetect" found no recognizable tracks '
-            '(audio / video / subtitle) in "{}".'.format(filename))
+            f'(audio / video / subtitle) in "{filename}".')
 
       for media_type_value, track_num in tracks:
         new_inp = dict(inp)                        # inherit all user fields
@@ -465,11 +459,13 @@ class InputConfig(configuration.Base):
     return expanded
 
   def __init__(self, dictionary: Dict[str, Any]):
-    """A constructor to check that either inputs or mutliperiod_inputs_list is provided,
-    and produce a helpful error message in case both or none are provided.
+    """A constructor to check that either inputs or multiperiod_inputs_list is
+    provided, and produce a helpful error message in case both or none are
+    provided.
 
-    We need these checks before passing the input dictionary to the configuration.Base constructor,
-    because it does not check for this 'exclusive or-ing' relationship between fields.
+    We need these checks before passing the input dictionary to the
+    configuration.Base constructor, because it does not check for this
+    'exclusive or-ing' relationship between fields.
     """
 
     assert isinstance(dictionary, dict), """Malformed Input Config File,
@@ -483,7 +479,8 @@ class InputConfig(configuration.Base):
 
     # Because these fields are not marked as required at the class level
     # , we need to check ourselves that one of them is provided.
-    if not dictionary.get('inputs') and not dictionary.get('multiperiod_inputs_list'):
+    if (not dictionary.get('inputs')
+        and not dictionary.get('multiperiod_inputs_list')):
       raise configuration.MissingRequiredExclusiveFields(
         InputConfig, 'inputs', 'multiperiod_inputs_list')
 

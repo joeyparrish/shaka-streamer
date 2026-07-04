@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Base classes for the Shaka Streamer configuration system."""
+
 import abc
 import enum
 import functools
 import re
 
 import typing
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type
 from typing import Generic, TypeVar, cast
 
 
@@ -47,22 +49,21 @@ class UnrecognizedField(ConfigError):
   """An error raised when an unrecognized field is encountered in the input."""
 
   def __str__(self):
-    return '{} contains unrecognized field: {}'.format(
-        self.class_name, self.field_name)
+    return f'{self.class_name} contains unrecognized field: {self.field_name}'
 
 class WrongType(ConfigError):
   """An error raised when a field in the input has the wrong type."""
 
   def __str__(self):
-    return 'In {}, {} field requires a {}'.format(
-        self.class_name, self.field_name, self.field.get_type_name())
+    return (f'In {self.class_name}, {self.field_name} field requires a '
+            f'{self.field.get_type_name()}')
 
 class MissingRequiredField(ConfigError):
   """An error raised when a required field is missing from the input."""
 
   def __str__(self):
-    return '{} is missing a required field: {}, a {}'.format(
-        self.class_name, self.field_name, self.field.get_type_name())
+    return (f'{self.class_name} is missing a required field: '
+            f'{self.field_name}, a {self.field.get_type_name()}')
 
 class MalformedField(ConfigError):
   """An error raised when a field is malformed."""
@@ -72,43 +73,43 @@ class MalformedField(ConfigError):
     self.reason = reason
 
   def __str__(self):
-    return 'In {}, {} field is malformed: {}'.format(
-        self.class_name, self.field_name, self.reason)
+    return (f'In {self.class_name}, {self.field_name} field is malformed: '
+            f'{self.reason}')
 
 class ConflictingFields(ConfigError):
-  """An error raised when multiple fields are given and only one of them is allowed at a time."""
-  
+  """An error raised when multiple fields are given and only one of them is
+  allowed at a time."""
+
   def __init__(self, class_ref, field1_name, field2_name):
     self.field1_name = field1_name
     self.field1_type = class_ref.__dict__[field1_name].get_type_name()
     self.field2_name = field2_name
     self.field2_type = class_ref.__dict__[field2_name].get_type_name()
     super().__init__(class_ref, field1_name, class_ref.__dict__[field1_name])
-  
+
   def __str__(self):
-    return """In {}, these fields are conflicting:
-    {} a {}
-    and
-    {} a {}\n  consider using only one of them.""".format(self.class_name,
-                      self.field1_name, self.field1_type,
-                      self.field2_name, self.field2_type)
-    
+    return (f'In {self.class_name}, these fields are conflicting:\n'
+            f'    {self.field1_name} a {self.field1_type}\n'
+            f'    and\n'
+            f'    {self.field2_name} a {self.field2_type}\n'
+            '  consider using only one of them.')
+
 class MissingRequiredExclusiveFields(ConfigError):
   """An error raised when one of an exclusively required fields is missing."""
-  
+
   def __init__(self, class_ref, field1_name, field2_name):
     self.field1_name = field1_name
     self.field1_type = class_ref.__dict__[field1_name].get_type_name()
     self.field2_name = field2_name
     self.field2_type = class_ref.__dict__[field2_name].get_type_name()
     super().__init__(class_ref, field1_name, class_ref.__dict__[field1_name])
-  
+
   def __str__(self):
-    return """{} is missing a required field. Use exactly one of these fields:
-    {} a {}
-    or
-    {} a {}""".format(self.class_name, self.field1_name, self.field1_type,
-                      self.field2_name, self.field2_type)
+    return (f'{self.class_name} is missing a required field. '
+            f'Use exactly one of these fields:\n'
+            f'    {self.field1_name} a {self.field1_type}\n'
+            f'    or\n'
+            f'    {self.field2_name} a {self.field2_type}')
 
 class ValidatingType(metaclass=abc.ABCMeta):
   """A base wrapper type that validates the input against a limited range.
@@ -144,7 +145,7 @@ class HexString(ValidatingType, str):
 
   @staticmethod
   def validate(value):
-    if type(value) is not str:
+    if not isinstance(value, str):
       raise TypeError()
     if not re.match(r'^[a-fA-F0-9]+$', value):
       raise ValueError('not a hexadecimal string')
@@ -153,7 +154,7 @@ class HexString(ValidatingType, str):
 # A type parameter used by the Generic Field below.
 # For example, for a Field with type=str, FieldType would be a string type and
 # Type[FieldType] would be the function "str".
-FieldType = TypeVar('FieldType')
+FieldType = TypeVar('FieldType')  # pylint: disable=invalid-name
 
 class Field(Generic[FieldType]):
   # TODO: This class is populated with actual configuration
@@ -163,19 +164,19 @@ class Field(Generic[FieldType]):
   """A container for metadata about individual config fields."""
 
   def __init__(self,
-               type: Optional[Type[FieldType]],
+               field_type: Optional[Type[FieldType]],
                required: bool = False,
                default: Optional[FieldType] = None) -> None:
     """
     Args:
-        type (class or typing module hint): The required type for values of this
-            field.
+        field_type (class or typing module hint): The required type for values
+            of this field.
         required (bool): True if this field is required on input.
         default: The default value if the field is not specified.
     """
-    subtypes = Field.get_subtypes(type)  # keytype, subtype
+    subtypes = Field.get_subtypes(field_type)  # keytype, subtype
 
-    self.type: Optional[Type] = Field.get_underlying_type(type)
+    self.type: Optional[Type] = Field.get_underlying_type(field_type)
     self.keytype: Optional[Type] = subtypes[0]
     self.subtype: Optional[Type] = subtypes[1]
     self.required: bool = required
@@ -190,7 +191,7 @@ class Field(Generic[FieldType]):
     class property.  For example:
 
     class FooConfig(configuration.Base):
-      name = configuration.Field(type=str, default="Susan").cast()
+      name = configuration.Field(field_type=str, default="Susan").cast()
 
     At the class level, configuration fields are all Field instances.  At the
     instance level, the configuration Base class constructor sets all the fields
@@ -216,46 +217,46 @@ class Field(Generic[FieldType]):
     return cast(FieldType, self)
 
   @staticmethod
-  def get_underlying_type(type: Optional[Type]) -> Optional[Type]:
+  def get_underlying_type(field_type: Optional[Type]) -> Optional[Type]:
     """Get the underlying type from a typing module type hint."""
 
-    # In Python 3.8+, you can use typing.get_origin.  It returns None if "type"
-    # is something like "str" or "int" instead of "typing.List" or
-    # "typing.Dict", so fall back to type itself.
+    # In Python 3.8+, you can use typing.get_origin.  It returns None if
+    # "field_type" is something like "str" or "int" instead of "typing.List"
+    # or "typing.Dict", so fall back to field_type itself.
     if hasattr(typing, 'get_origin'):
-      return typing.get_origin(type) or type  # type: ignore
+      return typing.get_origin(field_type) or field_type  # type: ignore
 
     # Before Python 3.8, you can use this undocumented attribute to get the
     # original type.  If this doesn't exist, you are probably dealing with a
     # basic type like "str" or "int".
-    if hasattr(type, '__origin__'):
-      return type.__origin__ or type  # type: ignore
+    if hasattr(field_type, '__origin__'):
+      return field_type.__origin__ or field_type  # type: ignore
 
-    return type
+    return field_type
 
   @staticmethod
   def get_subtypes(
-      type: Optional[Type]) -> Tuple[Optional[Type], Optional[Type]]:
+      field_type: Optional[Type]) -> Tuple[Optional[Type], Optional[Type]]:
     """For Dict hints, returns (keytype, valuetype).
 
     For List hints, returns (None, valuetype).
 
     For everything else, returns (None, None)."""
 
-    # In Python 3.8+, you can use typing.get_args.  It returns () if "type"
-    # is something like "str" or "int" instead of "typing.List" or
-    # "typing.Dict".
+    # In Python 3.8+, you can use typing.get_args.  It returns () if
+    # "field_type" is something like "str" or "int" instead of "typing.List"
+    # or "typing.Dict".
     if hasattr(typing, 'get_args'):
-      args = typing.get_args(type)
-    elif hasattr(type, '__args__'):
+      args = typing.get_args(field_type)
+    elif hasattr(field_type, '__args__'):
       # Before Python 3.8, you can use this undocumented attribute to get the
       # type parameters.  If this doesn't exist, you are probably dealing with a
       # basic type like "str" or "int".
-      args = getattr(type, '__args__')
+      args = getattr(field_type, '__args__')
     else:
       args = ()
 
-    underlying = Field.get_underlying_type(type)
+    underlying = Field.get_underlying_type(field_type)
     if underlying is dict:
       return cast(Tuple[Optional[Type], Optional[Type]], args)
     if underlying is list:
@@ -263,36 +264,36 @@ class Field(Generic[FieldType]):
     return (None, None)
 
   @staticmethod
-  def get_type_name_static(type: Optional[Type],
+  def get_type_name_static(field_type: Optional[Type],
                            keytype: Optional[Type],
                            subtype: Optional[Type]) -> str:
-    """Get a human-readable string for the name of type."""
+    """Get a human-readable string for the name of field_type."""
 
     # Make these special cases a little more readable.
-    if type is str:
+    if field_type is str:
       # Call it a string, not a "str".
       return 'string'
-    elif type is list:
+    elif field_type is list:
       # Mention the subtype.
-      return 'list of {}'.format(
-          Field.get_type_name_static(subtype, None, None))
-    elif type is dict:
+      return f'list of {Field.get_type_name_static(subtype, None, None)}'
+    elif field_type is dict:
       # Mention the subtype.
-      return 'dictionary of {} to {}'.format(
-          Field.get_type_name_static(keytype, None, None),
-          Field.get_type_name_static(subtype, None, None))
-    elif type is None:
+      return (f'dictionary of '
+              f'{Field.get_type_name_static(keytype, None, None)} to '
+              f'{Field.get_type_name_static(subtype, None, None)}')
+    elif field_type is None:
       # This is only here to allow generic handling of UnrecognizedField errors.
       return 'None'
-    elif issubclass(type, enum.Enum):
+    elif issubclass(field_type, enum.Enum):
       # Get the list of valid options as quoted strings.
-      options = [repr(str(member.value)) for member in type]
-      return '{} (one of {})'.format(type.__name__, ', '.join(options))
-    elif issubclass(type, ValidatingType):
-      return type.name()
+      options = [repr(str(member.value)) for member in field_type]
+      options_str = ', '.join(options)
+      return f'{field_type.__name__} (one of {options_str})'
+    elif issubclass(field_type, ValidatingType):
+      return field_type.name()
 
     # Otherwise, return the name of the type.
-    return type.__name__
+    return field_type.__name__
 
 
 class Base(object):
@@ -358,7 +359,7 @@ class Base(object):
 
     # For fields containing other config objects, specially check and convert
     # them.
-    assert field.type is not None, 'No type info for Field {}'.format(key)
+    assert field.type is not None, f'No type info for Field {key}'
     if issubclass(field.type, Base):
       # A config object at this stage should be a dictionary.
       if not isinstance(value, dict):
@@ -499,22 +500,22 @@ class RuntimeMap(Generic[RuntimeMapSubclass], Base):
     return self._sortable_properties() < other._sortable_properties()
 
   def __hash__(self) -> int:
-      return super().__hash__()
+    return super().__hash__()
 
   @classmethod
   def set_map(cls,
-              map: Dict[str, RuntimeMapSubclass]) -> None:
+              result_map: Dict[str, RuntimeMapSubclass]) -> None:
     """Set the map of valid values for this class."""
 
     assert cls != RuntimeMap, 'Do not use the base class directly!'
-    cls._map = map
+    cls._map = result_map
 
     # Synthesize a method on each value to allow the key to be recovered.
     # Use a default parameter in the lambda to effectively bind the parameter,
     # as described here: https://stackoverflow.com/a/19837683
     # Not doing this causes the lambda to always return the key from the final
     # iteration of the loop (a problem familiar to many JavaScript developers).
-    for key, value in map.items():
+    for key, value in result_map.items():
       setattr(value, 'get_key', lambda bound_key=key: bound_key)
 
   @classmethod
@@ -526,7 +527,7 @@ class RuntimeMap(Generic[RuntimeMapSubclass], Base):
       return cls._map[key]
     except KeyError:
       raise ValueError(
-          '{} is not a valid {}'.format(key, cls.__name__)) from None
+          f'{key} is not a valid {cls.__name__}') from None
 
   @classmethod
   def keys(cls):
@@ -546,22 +547,22 @@ class RuntimeMapKeyValidator(ValidatingType, str):
   The RuntimeMapKeyValidator subclass should have a "map_class" variable which
   points to the RuntimeMap subclass."""
 
-  """Must be provided by subclasses and point to the matching RuntimeMap
-  subclass."""
+  # Must be provided by subclasses and point to the matching RuntimeMap
+  # subclass.
   map_class: Type[RuntimeMap] = None  # type: ignore
 
   @classmethod
   def name(cls) -> str:
     options = [repr(str(key)) for key in cls.map_class.keys()]
-    return '{} name (one of {})'.format(
-        cls.map_class.__name__, ', '.join(options))
+    options_str = ', '.join(options)
+    return f'{cls.map_class.__name__} name (one of {options_str})'
 
   @classmethod
-  def validate(cls, key):
-    if type(key) is not str:
+  def validate(cls, value):
+    if not isinstance(value, str):
       raise TypeError()
 
-    if key not in cls.map_class.keys():
+    if value not in cls.map_class.keys():
       raise ValueError(
-          '{} is not a valid {}'.format(key, cls.name()))
+          f'{value} is not a valid {cls.name()}')
 

@@ -23,6 +23,7 @@
 # heavy lifting for us, and which needs the most customization, see:
 # http://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 
+"""Sphinx configuration for Shaka Streamer documentation."""
 
 # -- Path setup --------------------------------------------------------------
 
@@ -39,17 +40,17 @@ sys.path.insert(0, os.path.abspath(ROOT))
 
 # This imports certain types we will use directly in the customization at the
 # bottom of the config file.
-import docutils.nodes
-import sphinx.addnodes
-import streamer
-from streamer import bitrate_configuration
-import types
+import docutils.nodes  # pylint: disable=wrong-import-position
+import sphinx.addnodes  # pylint: disable=wrong-import-position
+import streamer  # pylint: disable=wrong-import-position
+from streamer import bitrate_configuration  # pylint: disable=wrong-import-position
+import types  # pylint: disable=wrong-import-position
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'Shaka Streamer'
-copyright = '2019, Google'
+copyright = '2019, Google'  # pylint: disable=redefined-builtin
 author = 'Google'
 
 # The short X.Y version
@@ -243,7 +244,7 @@ bitrate_configuration.AudioChannelLayout.set_map(
 # what type it accepts.
 name_to_type_map = {}
 
-def process_signature(app, _, name, obj, *other_ignored_args):
+def process_signature(_app, _, name, obj, *_other_ignored_args):
   """A callback for each signature in the docs.
 
   Here, we build a map of the various config field names to their Field objects
@@ -257,13 +258,13 @@ def process_signature(app, _, name, obj, *other_ignored_args):
   if isinstance(obj, streamer.configuration.Field):
     name_to_type_map[name] = obj
 
-def get_first_child(node, type):
-  """Return the first child of |node| that has type |type|."""
+def get_first_child(node, node_type):
+  """Return the first child of |node| that has type |node_type|."""
 
-  index = node.first_child_matching_class(type)
+  index = node.first_child_matching_class(node_type)
   return node[index]
 
-def process_doc_nodes(app, doctree, fromdocname):
+def process_doc_nodes(_app, doctree, _fromdocname):
   """A callback invoked when the documentation is built.
 
   We use this opportunity to override the docs for config Field objects to
@@ -290,7 +291,7 @@ def process_doc_nodes(app, doctree, fromdocname):
       annotation.replace(text, docutils.nodes.Text(
           data=replacement_text, rawsource=replacement_text))
 
-def skip_member(app, what, name, obj, skip, options):
+def skip_member(_app, _what, _name, obj, _skip, _options):
   """A callback invoked on each member to decide if it should be skipped.
 
   Returns True to skip a member in the docs.  Any member which is skipped will
@@ -310,7 +311,7 @@ def skip_member(app, what, name, obj, skip, options):
   # Though this may have been fixed in a later version of Sphinx, we can ignore
   # "what" and check the type of "obj" instead.  For our case, this is a
   # reference to the actual method.
-  if type(obj) is types.FunctionType and 'configuration' in obj.__module__:
+  if isinstance(obj, types.FunctionType) and 'configuration' in obj.__module__:
     return True
 
 

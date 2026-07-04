@@ -19,7 +19,6 @@ import enum
 from setproctitle import setproctitle  # type: ignore
 from queue import Queue
 
-from typing import Optional
 from typing_extensions import Self
 
 import multiprocessing
@@ -45,9 +44,9 @@ class MessageType(enum.Enum):
 
 class Message(object):
   """Message objects used for IPC from the main process to the pool."""
-  def __init__(self, type: MessageType, path: str = "",
+  def __init__(self, worker_type: MessageType, path: str = '',
                data: bytes = b'') -> None:
-    self.type: MessageType = type
+    self.type: MessageType = worker_type
     self.path: str = path
     self.data: bytes = data
 
@@ -186,7 +185,7 @@ class Pool(AbstractPool):
     self._all_processes: list[WorkerProcess] = []
     self._available_processes: Queue[WorkerProcess] = Queue()
 
-    for i in range(size):
+    for _ in range(size):
       reader, writer = multiprocessing.Pipe(duplex=False)
       process = multiprocessing.Process(target=worker_target,
                                         args=(upload_location, reader))
@@ -195,10 +194,10 @@ class Pool(AbstractPool):
       self._available_processes.put(worker_process)
       self._all_processes.append(worker_process)
 
-  def _release(self, worker_process: WorkerProcess) -> None:
+  def _release(self, process: WorkerProcess) -> None:
     """Called by worker handles to release the worker back to the pool."""
 
-    self._available_processes.put(worker_process)
+    self._available_processes.put(process)
 
   def get_worker(self) -> WorkerHandle:
     """Get an available worker.  Blocks until one is available.

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Package setup for shaka-streamer-binaries."""
 
 import sys
 import setuptools # type: ignore
@@ -22,14 +23,15 @@ separator_index = sys.argv.index('--')
 platform_binaries = sys.argv[separator_index + 1:]
 sys.argv = sys.argv[:separator_index]
 
-with open('README.md', 'r') as f:
+with open('README.md', 'r', encoding='utf-8') as f:
   long_description = f.read()
 
 setuptools.setup(
   name='shaka-streamer-binaries',
   version=streamer_binaries.__version__,
   author='Google',
-  description='A package containing FFmpeg, FFprobe, and Shaka Packager static builds.',
+  description=('A package containing FFmpeg, FFprobe, and Shaka Packager '
+               'static builds.'),
   long_description=long_description,
   long_description_content_type='text/markdown',
   url='https://github.com/shaka-project/shaka-streamer/tree/main/binaries',

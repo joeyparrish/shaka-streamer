@@ -84,11 +84,12 @@ class RequestHandler(BaseHTTPRequestHandler):
 
   # NOTE: The default values here for log_request are taken from the base
   # class, and not a design decision of ours.
-  def log_request(self, code: Union[int, str] = '-', size: Union[int, str] = '-') -> None:
+  def log_request(self, code: Union[int, str] = '-',
+                  size: Union[int, str] = '-') -> None:
     """Override the request logging feature of the Python HTTP server."""
     try:
       code_int = int(code)
-    except:
+    except Exception:  # pylint: disable=broad-exception-caught
       code_int = 0
 
     if code_int >= 200 and code_int <= 299:
@@ -120,7 +121,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.rfile.readline()  # Read the trailer
 
         if chunk_size == 0:
-           break  # EOF
+          break  # EOF
 
       # All done.
       if not suppress:
@@ -137,7 +138,7 @@ class RequestHandler(BaseHTTPRequestHandler):
       with self._pool.get_worker() as worker:
         worker.write_non_chunked(self.path, self.rfile.read(content_length))
 
-  def do_PUT(self) -> None:
+  def do_PUT(self) -> None:  # pylint: disable=invalid-name
     """Handle PUT requests coming from Shaka Packager."""
     suppress = self._rate_limiter.suppress(self.path)
 
@@ -149,8 +150,9 @@ class RequestHandler(BaseHTTPRequestHandler):
 
       # Close the input and respond.
       self.rfile.close()
-      self.send_response(HTTP_STATUS_ACCEPTED if suppress else HTTP_STATUS_CREATED)
-    except Exception as ex:
+      status = HTTP_STATUS_ACCEPTED if suppress else HTTP_STATUS_CREATED
+      self.send_response(status)
+    except Exception as ex:  # pylint: disable=broad-exception-caught
       print('Upload failure: ' + str(ex))
       traceback.print_exc()
       self.send_response(HTTP_STATUS_FAILED)
@@ -159,13 +161,13 @@ class RequestHandler(BaseHTTPRequestHandler):
     # "returned nothing".
     self.end_headers()
 
-  def do_DELETE(self) -> None:
+  def do_DELETE(self) -> None:  # pylint: disable=invalid-name
     """Handle DELETE requests coming from Shaka Packager."""
     try:
       with self._pool.get_worker() as worker:
         worker.delete(self.path)
       self.send_response(HTTP_STATUS_NO_CONTENT)
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=broad-exception-caught
       print('Upload failure: ' + str(ex))
       traceback.print_exc()
       self.send_response(HTTP_STATUS_FAILED)
@@ -192,7 +194,7 @@ class ProxyNode(ThreadedNodeBase):
                      continue_on_exception=True,
                      sleep_time=3)
     if not ProxyNode.is_supported(upload_location):
-      raise RuntimeError("Protocol of {} isn't supported".format(upload_location))
+      raise RuntimeError(f"Protocol of {upload_location} isn't supported")
 
     self._upload_location = upload_location
     self._rate_limiter = RateLimiter()
@@ -211,31 +213,28 @@ class ProxyNode(ThreadedNodeBase):
 
     self._pool = Pool(self._upload_location, self._pool_size)
 
-    handler_factory = (
-        lambda *args, **kwargs: self.create_handler(*args, **kwargs))
-
     # By specifying port 0, a random unused port will be chosen for the server.
     self._server = ThreadingHTTPServer(
-        ('localhost', 0), handler_factory)
+        ('localhost', 0), self.create_handler)
     self.server_location = (
         'http://' + self._server.server_name +
         ':' + str(self._server.server_port))
 
     return super().start()
 
-  def stop(self, status: Optional[ProcessStatus]) -> None:
+  def stop(self, _status: Optional[ProcessStatus]) -> None:
     if self._server:
       self._server.shutdown()
       self._server = None
     if self._pool:
       self._pool.close()
       self._pool = None
-    return super().stop(status)
+    return super().stop(_status)
 
   def check_status(self) -> ProcessStatus:
     # This makes sure this node will never prevent the shutdown of the whole
     # system.  It will be stopped explicitly when ControllerNode tears down.
-    return ProcessStatus.Finished
+    return ProcessStatus.FINISHED
 
   def _thread_single_pass(self) -> None:
     assert self._server is not None
